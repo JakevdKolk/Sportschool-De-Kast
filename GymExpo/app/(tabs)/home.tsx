@@ -1,9 +1,13 @@
 import { Button } from '@react-navigation/elements';
+import { useNavigation, useRouter } from 'expo-router';
 import { StyleSheet, View, ScrollView, Text, ImageBackground, Dimensions, Pressable } from 'react-native';
 
 const { height, width } = Dimensions.get('window');
 console.log(height, width);
 export default function TabTwoScreen() {
+  const navigation = useNavigation();
+  const router = useRouter();
+
   return (
     <ImageBackground
       source={require('../../assets/images/sportschool-kast-background.png')}
@@ -18,7 +22,7 @@ export default function TabTwoScreen() {
             </Text>
           </View>
           <View style={styles.buttonContainer}>
-            <Pressable style={[styles.btn, styles.loginBtn]} onPress={() => console.log('Login')}>
+            <Pressable style={[styles.btn, styles.loginBtn]} onPress={() => router.push('/Auth/Login')}>
               <Text style={styles.btnText}>Login</Text>
             </Pressable>
             <Pressable style={[styles.btn, styles.registerBtn]} onPress={() => console.log('Register')}>
@@ -68,7 +72,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 5,
-    marginBottom: 80,
+    marginBottom: 80, 
 
   },
   btn: {
