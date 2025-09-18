@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
-import {
-    View,
-    StyleSheet,
-    ScrollView,
-    TouchableOpacity,
-    SafeAreaView,
-} from 'react-native';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors } from '@/constants/theme';
+import { View, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { ThemedText } from '../components/ThemedText';
+import { ThemedView } from '../components/ThemedView';
+import { useColorScheme } from '../hooks/useColorScheme';
+import { Colors } from '../constants/Colors';
 
 interface CalendarDay {
     day: number;
@@ -27,107 +21,83 @@ interface ScheduleItem {
     type: 'lesson' | 'workout' | 'run';
 }
 
-interface CalendarData {
-    month: string;
-    year: number;
-    days: CalendarDay[];
-}
+const screenWidth = Dimensions.get('window').width;
+const daySize = (screenWidth - 64) / 7;
 
 export default function AgendaScreen() {
     const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+
     const [selectedDate, setSelectedDate] = useState(18);
     const [currentMonth] = useState('September');
 
-    const colors = Colors[colorScheme ?? 'light'];
-
-    const calendarData: CalendarData = {
-        month: 'September',
-        year: 2024,
-        days: [
-            
-            { day: 29, isCurrentMonth: false, isSelected: false, isToday: false },
-            { day: 30, isCurrentMonth: false, isSelected: false, isToday: false },
-            { day: 31, isCurrentMonth: false, isSelected: false, isToday: false },
-
-            ...Array.from({ length: 30 }, (_, i) => ({
-                day: i + 1,
-                isCurrentMonth: true,
-                isSelected: i + 1 === selectedDate,
-                isToday: i + 1 === 18,
-            })),
-            // Next month days
-            { day: 1, isCurrentMonth: false, isSelected: false, isToday: false },
-            { day: 2, isCurrentMonth: false, isSelected: false, isToday: false },
-        ],
-    };
+    const calendarDays: CalendarDay[] = [
+        { day: 29, isCurrentMonth: false, isSelected: false, isToday: false },
+        { day: 30, isCurrentMonth: false, isSelected: false, isToday: false },
+        ...Array.from({ length: 30 }, (_, i) => ({
+            day: i + 1,
+            isCurrentMonth: true,
+            isSelected: i + 1 === selectedDate,
+            isToday: i + 1 === 18,
+        })),
+        { day: 1, isCurrentMonth: false, isSelected: false, isToday: false },
+        { day: 2, isCurrentMonth: false, isSelected: false, isToday: false },
+    ];
 
     const scheduleData: ScheduleItem[] = [
-        {
-            id: '1',
-            title: 'Private lesson',
-            subtitle: 'With Jake',
-            startTime: '09:00',
-            endTime: '10:00',
-            type: 'lesson',
-        },
-        {
-            id: '2',
-            title: 'Daily Work out',
-            subtitle: 'Push up 10x',
-            startTime: '09:00',
-            endTime: '10:00',
-            type: 'workout',
-        },
-        {
-            id: '3',
-            title: 'Daily Run',
-            subtitle: '10km run',
-            startTime: '12:00',
-            endTime: '13:00',
-            type: 'run',
-        },
-        {
-            id: '4',
-            title: 'Daily Run',
-            subtitle: '10km run',
-            startTime: '12:00',
-            endTime: '13:00',
-            type: 'run',
-        },
+        { id: '1', title: 'Private Lesson', subtitle: 'With Jake', startTime: '09:00', endTime: '10:00', type: 'lesson' },
+        { id: '2', title: 'Daily Workout', subtitle: 'Push up 10x', startTime: '10:00', endTime: '10:30', type: 'workout' },
+        { id: '3', title: 'Daily Run', subtitle: '10km run', startTime: '12:00', endTime: '13:00', type: 'run' },
+        { id: '4', title: 'Stretching', subtitle: 'Full body', startTime: '18:00', endTime: '18:30', type: 'workout' },
     ];
 
     const weekDays = ['Mon', 'Din', 'Woe', 'Don', 'Vrij', 'Zat', 'Zon'];
 
-    const renderCalendarDay = (dayData: CalendarDay, index: number) => {
-        const isSelected = dayData.isSelected;
-        const isToday = dayData.isToday;
+    const renderCalendarDay = (day: CalendarDay, index: number) => {
+        const isSelected = day.isSelected;
+        const isToday = day.isToday;
 
         return (
             <TouchableOpacity
                 key={index}
+                onPress={() => setSelectedDate(day.day)}
                 style={[
                     styles.calendarDay,
-                    { backgroundColor: 'transparent' },
-                    isSelected && { backgroundColor: colors.tint },
-                    isToday && !isSelected && { backgroundColor: colors.background === '#000000' ? '#333333' : '#e0e0e0' },
+                    {
+                        width: daySize,
+                        height: daySize,
+                        borderRadius: daySize / 2,
+                        backgroundColor: isSelected
+                            ? '#3A9ADA'
+                            : isToday
+                                ? colorScheme === 'dark'
+                                    ? '#555'
+                                    : '#ddd'
+                                : 'transparent',
+                    },
                 ]}
-                onPress={() => setSelectedDate(dayData.day)}
             >
                 <ThemedText
                     style={[
                         styles.calendarDayText,
-                        !dayData.isCurrentMonth && { color: colors.tabIconDefault },
-                        isSelected && { color: colorScheme === 'dark' ? '#ffffff' : '#000000', fontWeight: 'bold' },
+                        !day.isCurrentMonth && { color: colors.tabIconDefault },
+                        isSelected && { color: '#000', fontWeight: '700', fontSize: 14 },
                     ]}
                 >
-                    {dayData.day}
+                    {day.day}
                 </ThemedText>
             </TouchableOpacity>
         );
     };
 
     const renderScheduleItem = (item: ScheduleItem) => (
-        <ThemedView key={item.id} style={[styles.scheduleItem, { backgroundColor: colors.background === '#000000' ? '#2a2a2a' : '#f5f5f5' }]}>
+        <ThemedView
+            key={item.id}
+            style={[
+                styles.scheduleItem,
+                { backgroundColor: colorScheme === 'dark' ? '#1c1c1c' : '#f0f0f0' },
+            ]}
+        >
             <View style={styles.timeContainer}>
                 <ThemedText style={styles.startTime}>{item.startTime}</ThemedText>
                 <ThemedText style={[styles.endTime, { color: colors.tabIconDefault }]}>{item.endTime}</ThemedText>
@@ -135,49 +105,54 @@ export default function AgendaScreen() {
             <View style={styles.scheduleContent}>
                 <ThemedText style={styles.scheduleTitle}>{item.title}</ThemedText>
                 {item.subtitle && (
-                    <ThemedText style={[styles.scheduleSubtitle, { color: colors.tabIconDefault }]}>{item.subtitle}</ThemedText>
+                    <ThemedText style={[styles.scheduleSubtitle, { color: colors.tabIconDefault }]}>
+                        {item.subtitle}
+                    </ThemedText>
                 )}
             </View>
         </ThemedView>
     );
 
     return (
-        <ThemedView style={styles.container}>
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {/* Calendar Section */}
-                <ThemedView style={[styles.calendarContainer, { backgroundColor: colors.background === '#000000' ? '#2a2a2a' : '#f5f5f5' }]}>
-                    <ThemedText type="subtitle" style={styles.monthTitle}>
-                        {selectedDate} {calendarData.month}
+        <ThemedView style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }]}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
+                <ThemedView style={[styles.calendarContainer, { backgroundColor: colorScheme === 'dark' ? '#252525' : '#f8f8f8', paddingTop: 32 }]}>
+                    <ThemedText type="subtitle" style={[styles.monthTitle, { color: colorScheme === 'dark' ? '#eee' : '#333' }]}>
+                        {selectedDate} {currentMonth}
                     </ThemedText>
 
-                    {/* Week days header */}
                     <View style={styles.weekDaysContainer}>
-                        {weekDays.map((day, index) => (
-                            <ThemedText key={index} style={[styles.weekDay, { color: colors.tabIconDefault }]}>
+                        {weekDays.map((day, i) => (
+                            <ThemedText
+                                key={i}
+                                style={[styles.weekDay, { color: colorScheme === 'dark' ? '#aaa' : '#555' }]}
+                            >
                                 {day}
                             </ThemedText>
                         ))}
                     </View>
 
-                    {/* Calendar grid */}
-                    <View style={styles.calendarGrid}>
-                        {calendarData.days.map((dayData, index) =>
-                            renderCalendarDay(dayData, index)
-                        )}
-                    </View>
+                    <View style={styles.calendarGrid}>{calendarDays.map(renderCalendarDay)}</View>
                 </ThemedView>
 
-                {/* Schedule Section */}
-                <ThemedView style={styles.scheduleContainer}>
-                    <ThemedText type="subtitle" style={styles.scheduleDate}>
+                <ThemedView style={[
+                    styles.scheduleContainer,
+                    { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff', borderRadius: 14, padding: 16 }
+                ]}>
+                    <ThemedText type="subtitle" style={[styles.scheduleDate, { color: colorScheme === 'dark' ? '#eee' : '#333' }]}>
                         {selectedDate} {currentMonth}
                     </ThemedText>
 
-                    {scheduleData.slice(0, 1).map((item) => renderScheduleItem(item))}
+                    {scheduleData.slice(0, 1).map(renderScheduleItem)}
 
-                    <ThemedText type="subtitle" style={styles.todayLabel}>Vandaag</ThemedText>
+                    <ThemedText
+                        type="subtitle"
+                        style={[styles.todayLabel, { color: colorScheme === 'dark' ? '#ccc' : '#777' }]}
+                    >
+                        Vandaag
+                    </ThemedText>
 
-                    {scheduleData.slice(1).map((item) => renderScheduleItem(item))}
+                    {scheduleData.slice(1).map(renderScheduleItem)}
                 </ThemedView>
             </ScrollView>
         </ThemedView>
@@ -185,88 +160,26 @@ export default function AgendaScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    scrollView: {
-        flex: 1,
-    },
-    calendarContainer: {
-        marginHorizontal: 16,
-        marginTop: 16,
-        borderRadius: 12,
-        padding: 16,
-    },
-    monthTitle: {
-        marginBottom: 16,
-    },
-    weekDaysContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    weekDay: {
-        fontSize: 12,
-        textAlign: 'center',
-        width: 35,
-    },
-    calendarGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-    },
+    container: { flex: 1, marginTop: 45 },
+    calendarContainer: { margin: 16, borderRadius: 14, padding: 16 },
+    monthTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
+    weekDaysContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+    weekDay: { fontSize: 12, textAlign: 'center', width: (screenWidth - 64) / 7 },
+    calendarGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
     calendarDay: {
-        width: 35,
-        height: 35,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 8,
-        borderRadius: 17.5,
     },
-    calendarDayText: {
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    scheduleContainer: {
-        marginHorizontal: 16,
-        marginTop: 16,
-        paddingBottom: 100, // Add padding for tab bar
-    },
-    scheduleDate: {
-        marginBottom: 16,
-    },
-    scheduleItem: {
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    timeContainer: {
-        marginRight: 16,
-        alignItems: 'flex-start',
-    },
-    startTime: {
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    endTime: {
-        fontSize: 14,
-        marginTop: 2,
-    },
-    scheduleContent: {
-        flex: 1,
-    },
-    scheduleTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    scheduleSubtitle: {
-        fontSize: 14,
-    },
-    todayLabel: {
-        marginTop: 24,
-        marginBottom: 16,
-    },
+    calendarDayText: { fontSize: 12, fontWeight: '500' },
+    scheduleContainer: { marginHorizontal: 16, marginTop: 16 },
+    scheduleDate: { fontSize: 16, fontWeight: '600', marginBottom: 16 },
+    scheduleItem: { borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center' },
+    timeContainer: { marginRight: 16, alignItems: 'flex-start' },
+    startTime: { fontSize: 16, fontWeight: 'bold' },
+    endTime: { fontSize: 14, marginTop: 2 },
+    scheduleContent: { flex: 1 },
+    scheduleTitle: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
+    scheduleSubtitle: { fontSize: 14 },
+    todayLabel: { marginTop: 24, marginBottom: 12, fontSize: 14, fontWeight: '500' },
 });

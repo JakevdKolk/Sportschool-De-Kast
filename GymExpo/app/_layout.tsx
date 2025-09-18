@@ -18,6 +18,13 @@ export default function RootLayout() {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
+  const storedAuth = AsyncStorage.getItem('auth');
+  useEffect(() => {
+    console.log("Stored auth value:", storedAuth);
+    console.log("Authenticated state:", authenticated);
+    console.log("Loading state:", loading);
+  }, [storedAuth, loading, authenticated]);
+
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -39,10 +46,10 @@ export default function RootLayout() {
   useEffect(() => {
     const handleAuth = async () => {
       if (!loading && authenticated === false) {
-        router.replace('/Auth/Login');
+        router.replace('/LandingsPage');
       }
       if (authenticated) {
-        await AsyncStorage.setItem('auth', 'true'); // optioneel: updaten
+        await AsyncStorage.setItem('auth', 'true');
       }
     };
 
@@ -61,8 +68,8 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         <Stack.Screen name="login" />
+        <Stack.Screen name="landingspage" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

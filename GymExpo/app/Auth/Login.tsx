@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { StyleSheet, View, ScrollView, Text, ImageBackground, TextInput, Pressable, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 
 const { height, width } = Dimensions.get('window');
 
@@ -12,15 +12,30 @@ export const options = {
 export default function LoginScreen() {
   const [loginState, setLoginState] = useState(AsyncStorage.getItem('authToken'));
   const router = useRouter();
+  const navigation = useNavigation();
+
 
   async function handleLogin() {
-    // ... hier doe je je login logic
     console.log('Inloggen...');
-    await AsyncStorage.setItem('auth', 'true'); 
+    await AsyncStorage.setItem('auth', 'true');
     if (await AsyncStorage.getItem('auth') === 'true') {
-      router.back();
+      router.replace('/(tabs)/home');
     }
   }
+
+  useLayoutEffect(() => {
+    // verberg tabs
+    navigation.getParent()?.setOptions({
+      tabBarStyle: { display: 'none' }
+    });
+
+    // optie: show tabs weer bij unmount
+    return () => {
+      navigation.getParent()?.setOptions({
+        tabBarStyle: undefined
+      });
+    };
+  }, [navigation]);
 
   return (
     <ImageBackground
