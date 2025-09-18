@@ -7,48 +7,48 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useEffect, useState } from 'react';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+    anchor: '(tabs)',
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const router = useRouter();
+    const colorScheme = useColorScheme();
+    const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = null; 
-      setAuthenticated(!!token);
-      setLoading(false);
-    };
+    useEffect(() => {
+        const checkAuth = async () => {
+            const token = null;
+            setAuthenticated(!!token);
+            setLoading(false);
+        };
 
-    checkAuth();
-  }, []);
+        checkAuth();
+    }, []);
 
-  useEffect(() => {
-    if (!loading && authenticated === false) {
-      router.replace('/Auth/Login'); 
+    useEffect(() => {
+        if (!loading && authenticated === false) {
+            router.replace('/(tabs)/agenda');
+        }
+    }, [loading, authenticated]);
+
+    if (loading) {
+        return (
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <StatusBar style="auto" />
+            </ThemeProvider>
+        );
     }
-  }, [loading, authenticated]);
 
-  if (loading) {
     return (
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                <Stack.Screen name="login" />
+            </Stack>
+            <StatusBar style="auto" />
+        </ThemeProvider>
     );
-  }
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        <Stack.Screen name="login" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
 }
