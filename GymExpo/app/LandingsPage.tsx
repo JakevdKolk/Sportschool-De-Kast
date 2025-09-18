@@ -37,7 +37,7 @@ export default function TabTwoScreen() {
             <Pressable style={[styles.btn, styles.loginBtn]} onPress={() => router.push('/Auth/Login')}>
               <Text style={styles.btnText}>Login</Text>
             </Pressable>
-            <Pressable style={[styles.btn, styles.registerBtn]} onPress={() => console.log('Register')}>
+            <Pressable style={[styles.btn, styles.registerBtn]} onPress={() => router.push('/Auth/Register')}>
               <Text style={styles.btnText}>Register</Text>
             </Pressable>
 
