@@ -7,6 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useEffect, useState } from 'react';
 
+import abonnement from './abonnement';
+
 export const unstable_settings = {
   anchor: '(tabs)',
 };
@@ -69,6 +71,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="login" />
+        <Stack.Screen name="abonnement"/>
         <Stack.Screen name="register" />
         <Stack.Screen name="landingspage" />
       </Stack>

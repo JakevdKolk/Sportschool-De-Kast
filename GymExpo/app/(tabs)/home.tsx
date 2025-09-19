@@ -14,6 +14,8 @@ import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { Colors } from '../constants/Colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RefreshControl } from 'react-native';
 
 type TailwindStyles = {
     layout: Record<string, ViewStyle>;
@@ -74,6 +76,7 @@ const tw: TailwindStyles = {
 const screenWidth = Dimensions.get('window').width;
 const cardWidth = (screenWidth - 48) / 2;
 
+
 interface StatCircle {
     value: number;
     maxValue: number;
@@ -82,49 +85,36 @@ interface StatCircle {
     unit: string;
 }
 
-interface AppointmentItemProps {
-    time: string;
-    date: string;
-    colorScheme: string | null | undefined;
-    colors: any;
-}
-
-type TextStyles = {
-    [K in keyof TailwindStyles['text']]: TextStyle;
-};
-
-type ViewStyles = {
-    [K in keyof TailwindStyles['spacing'] | keyof TailwindStyles['layout']]: ViewStyle;
-};
-
-const AppointmentItem: React.FC<AppointmentItemProps> = ({ time, date, colorScheme, colors }) => (
-    <TouchableOpacity
-        style={[
-            tw.rounded.lg,
-            tw.spacing.p4,
-            tw.spacing.mb3,
-            colorScheme === 'dark' ? tw.bg.dark : tw.bg.light,
-            tw.layout.row,
-            tw.layout.itemsCenter,
-            { justifyContent: 'space-between' }
-        ]}
-    >
-        <View style={tw.layout.flex1}>
-            <ThemedText style={[tw.text.lg, tw.text.semibold] as TextStyle[]}>{time}</ThemedText>
-            <ThemedText style={[tw.text.gray500] as TextStyle[]}>{date}</ThemedText>
-        </View>
-        <View
-            style={[
-                tw.rounded.full,
-                { width: 8, height: 8, backgroundColor: '#3A9ADA', marginLeft: 12 }
-            ]}
-        />
-    </TouchableOpacity>
-);
 
 export default function HomeScreen() {
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
+
+    const [appointments, setAppointments] = useState<any[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const fetchAppointments = useCallback(async () => {
+        try {
+            const stored = await AsyncStorage.getItem('appointments');
+            if (stored) {
+                setAppointments(JSON.parse(stored));
+            } else {
+                setAppointments([]);
+            }
+        } catch (e) {
+            setAppointments([]);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchAppointments();
+    }, [fetchAppointments]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchAppointments();
+        setRefreshing(false);
+    };
 
     const [statsData] = useState<StatCircle[]>([
         {
@@ -212,12 +202,41 @@ export default function HomeScreen() {
         </TouchableOpacity>
     );
 
+    // AppointmentItem component (moved here for correct scope)
+    const AppointmentItem: React.FC<{ time: string; date: string; colorScheme: string | null | undefined; colors: any }> = ({ time, date, colorScheme, colors }) => (
+        <TouchableOpacity
+            style={[
+                tw.rounded.lg,
+                tw.spacing.p4,
+                tw.spacing.mb3,
+                colorScheme === 'dark' ? tw.bg.dark : tw.bg.light,
+                tw.layout.row,
+                tw.layout.itemsCenter,
+                { justifyContent: 'space-between' }
+            ]}
+        >
+            <View style={tw.layout.flex1}>
+                <ThemedText style={[tw.text.lg, tw.text.semibold] as TextStyle[]}>{time}</ThemedText>
+                <ThemedText style={[tw.text.gray500] as TextStyle[]}>{date}</ThemedText>
+            </View>
+            <View
+                style={[
+                    tw.rounded.full,
+                    { width: 8, height: 8, backgroundColor: '#3A9ADA', marginLeft: 12 }
+                ]}
+            />
+        </TouchableOpacity>
+    );
+
     return (
         <ThemedView style={styles.container}>
             <ScrollView
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
             >
                 <View style={[tw.spacing.p4]}>
                     <ThemedText
@@ -229,24 +248,26 @@ export default function HomeScreen() {
                     >
                         Opkomende Afspraken
                     </ThemedText>
-                    <AppointmentItem
-                        time="09:00"
-                        date="Sat 19 Okt"
-                        colorScheme={colorScheme}
-                        colors={colors}
-                    />
-                    <AppointmentItem
-                        time="12:00"
-                        date="Vri 23 Okt"
-                        colorScheme={colorScheme}
-                        colors={colors}
-                    />
-                    <AppointmentItem
-                        time="12:00"
-                        date="Di 3 Nov"
-                        colorScheme={colorScheme}
-                        colors={colors}
-                    />
+                    {appointments.length === 0 ? (
+                        <ThemedText style={[tw.text.gray500, { textAlign: 'center' }]}>Geen afspraken gevonden</ThemedText>
+                    ) : (
+                        appointments
+                            .sort((a, b) => {
+                                // Sort by date and time ascending
+                                const dateA = new Date(`${a.date}T${a.time}`);
+                                const dateB = new Date(`${b.date}T${b.time}`);
+                                return dateA.getTime() - dateB.getTime();
+                            })
+                            .map((appt) => (
+                                <AppointmentItem
+                                    key={appt.id}
+                                    time={appt.time}
+                                    date={appt.date}
+                                    colorScheme={colorScheme}
+                                    colors={colors}
+                                />
+                            ))
+                    )}
                 </View>
 
                 <View style={styles.section}>
@@ -291,7 +312,7 @@ export default function HomeScreen() {
                                                 <ThemedText style={styles.progressText}>
                                                     {stat.value}
                                                 </ThemedText>
-                                                <ThemedText style={[styles.progressUnit, { color: stat.color }]}>
+                                                <ThemedText style={[styles.progressUnit, { color: stat.color }]}>\
                                                     {stat.unit}
                                                 </ThemedText>
                                             </View>
@@ -300,7 +321,7 @@ export default function HomeScreen() {
                                     <ThemedText style={styles.exerciseLabel}>
                                         {stat.label}
                                     </ThemedText>
-                                    <ThemedText style={[styles.remainingText, { color: colors.tabIconDefault }]}>
+                                    <ThemedText style={[styles.remainingText, { color: colors.tabIconDefault }]}>\
                                         {Math.round(progress)}% of goal
                                     </ThemedText>
                                 </View>

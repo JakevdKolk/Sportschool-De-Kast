@@ -14,8 +14,12 @@ import { ThemedText } from '../components/ThemedText';
 import { ThemedView } from '../components/ThemedView';
 import { useColorScheme } from '../hooks/useColorScheme';
 import { Colors } from '../constants/Colors';
-import { router } from 'expo-router';
+import { router, useNavigation, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Pressable } from 'react-native';
+import { Text } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
 
 type TailwindStyles = {
     layout: Record<string, ViewStyle>;
@@ -84,16 +88,17 @@ interface ProfileInfoItemProps {
 const ProfileInfoItem: React.FC<ProfileInfoItemProps> = ({ label, value, isLast, onPress }) => {
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
+    const router = useRouter();
 
     return (
         <TouchableOpacity
-            onPress={onPress}
             style={[
                 tw.spacing.py4,
                 tw.spacing.px4,
                 !isLast && tw.border.b1,
                 { borderBottomColor: colorScheme === 'dark' ? '#2c2c2c' : '#e5e5e5' }
             ]}
+            onPress={() => label === 'Abonnement' ? router.push('/abonnement') : undefined}
         >
             <View style={[tw.layout.row, { justifyContent: 'space-between', alignItems: 'center' }]}>
                 <View>
@@ -104,12 +109,15 @@ const ProfileInfoItem: React.FC<ProfileInfoItemProps> = ({ label, value, isLast,
                         {value}
                     </ThemedText>
                 </View>
-                {/* <Image
-                    source={require('../../assets/icons/Anders.png')}
-                    style={{ width: 24, height: 24, opacity: onPress ? 1 : 0 }}
-                /> */}
+                {label === 'Abonnement' && (
+                    <View>
+                        <Pressable onPress={onPress}>
+                            <Ionicons name="create-outline" size={24} color="#3A9ADA" />
+                        </Pressable>
+                    </View>
+                )}
             </View>
-        </TouchableOpacity>
+        </TouchableOpacity >
     );
 };
 
@@ -165,10 +173,11 @@ export default function ProfileScreen() {
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
     const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+    const abonnementType = 1;
 
     const userInfo = {
         userName: 'UserName',
-        subscriptionType: 'Type 1 abonnement',
+        subscriptionType: `Type ${abonnementType} abonnement`,
         courses: 'Course 1',
         age: '22',
     };
